@@ -8,15 +8,16 @@ const genCompChoice=()=>{
     //floor is used to ignore decimal no. and give o/p in interger value
     return options[randIdx]; 
 }
-const drawGame=()
+const drawGame=()=>{
+    console.log("game was draw");
+}
 const playGame=(userChoice)=>{
     console.log("user choice=",userChoice);
 //generate comp choice
 const compChoice=genCompChoice();
    console.log("comp choice=",compChoice)
-   id (userChoice==compChoice){ //draw game
-
-
+   if (userChoice==compChoice) { //draw game
+drawGame();
    }
 }
 choices.forEach((choice)=>{
