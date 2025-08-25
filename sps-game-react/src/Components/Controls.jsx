@@ -1,3 +1,4 @@
+// Controls.jsx
 import React, { useState } from "react";
 import { FaRedo, FaTrash, FaCog } from "react-icons/fa";
 

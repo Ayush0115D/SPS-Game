@@ -63,7 +63,7 @@ export default function Leaderboard({ leaderboard, darkMode }) {
               {entry.score}
             </div>
             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              wins
+              won
             </div>
           </div>
         </div>

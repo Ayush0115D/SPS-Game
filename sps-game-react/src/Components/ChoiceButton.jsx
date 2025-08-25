@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function ChoiceButton({ name, Icon, emoji, onChoose, disabled, darkMode }) {
+  const [clicked, setClicked] = useState(false);
+
+  const handleClick = () => {
+    if (disabled) return;
+    setClicked(true);
+    onChoose(name);
+    setTimeout(() => setClicked(false), 300);
+  };
+
   return (
     <button
-      onClick={() => onChoose(name)}
+      onClick={handleClick}
       disabled={disabled}
       className={`
-        group relative p-8 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105
+        group relative p-8 rounded-2xl border-2 transition-all duration-300 transform
+        ${clicked ? "scale-125 rotate-3" : "hover:scale-110"}
         ${disabled 
           ? `opacity-50 cursor-not-allowed ${darkMode ? 'border-gray-600' : 'border-gray-400'}` 
           : `hover:shadow-xl ${darkMode 
@@ -22,7 +32,7 @@ export default function ChoiceButton({ name, Icon, emoji, onChoose, disabled, da
       `}
     >
       <div className="flex flex-col items-center gap-3">
-        <Icon className="text-4xl group-hover:scale-110 transition-transform duration-200" />
+        <Icon className={`text-4xl transition-transform duration-200 ${clicked ? "scale-125" : "group-hover:scale-110"}`} />
         <span className="text-xl font-bold">{name}</span>
         <span className="text-3xl">{emoji}</span>
       </div>

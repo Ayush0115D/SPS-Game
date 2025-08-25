@@ -171,7 +171,7 @@ export default function Game() {
                 ? "bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
                 : "bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent"
             }`}>
-              SPS — Stone Paper Scissors
+              The Classic Battle:SPS Game
             </span>
           </h1>
 
@@ -270,4 +270,4 @@ export default function Game() {
       </div>
     </div>
   );
-}
+} 

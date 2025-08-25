@@ -6,3 +6,32 @@
   100% { transform: scale(1); }
 }
 .pop { animation: pop 240ms ease; }
+/* Shake animation for loss */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-8px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.6s;
+}
+
+/* Flash overlay */
+.flash-green, .flash-red {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 50;
+  opacity: 0.4;
+  animation: fadeOut 0.3s forwards;
+}
+
+.flash-green { background: rgba(0, 255, 0, 0.4); }
+.flash-red { background: rgba(255, 0, 0, 0.4); }
+
+@keyframes fadeOut {
+  from { opacity: 0.4; }
+  to { opacity: 0; }
+}
