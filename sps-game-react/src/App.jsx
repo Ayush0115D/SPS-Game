@@ -1,7 +1,11 @@
-import Game from "./Components/Game";
+// src/App.jsx
+import React from "react";
+import Game from "./Game";
 
-function App() {
-  return <Game />;
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+      <Game />
+    </div>
+  );
 }
-
-export default App;
