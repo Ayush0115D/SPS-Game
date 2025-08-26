@@ -51,11 +51,12 @@ export default function Game() {
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState([]);
+  const [nameInput, setNameInput] = useState("");
 
   // Audio
   const { click, win, lose, draw } = useAudio();
 
-  // Game mode state: "pvc" or "pvp"
+  // Game mode state: "pvc" (player vs computer) or "pvp" (player vs player)
   const [gameMode, setGameMode] = useState("pvc");
 
   // Custom player names
@@ -64,7 +65,7 @@ export default function Game() {
     player2: "Computer",
   });
 
-  // Tracks which player's turn it is in PvP mode
+  // Tracks which player's turn it is in PvP mode (1 or 2)
   const [pvpTurn, setPvpTurn] = useState(1);
 
   // Load leaderboard on mount
@@ -110,9 +111,10 @@ export default function Game() {
   function playRound(choiceName) {
     if (gameOver) return;
     click();
-    triggerAnimation();
+    triggerAnimation(); // button pulse animation
 
     if (gameMode === "pvc") {
+      // Player vs Computer mode
       const compChoice =
         CHOICES[Math.floor(Math.random() * CHOICES.length)].name;
       const winner = decideWinner(choiceName, compChoice);
@@ -125,12 +127,12 @@ export default function Game() {
       let newP2Wins = player2Wins;
 
       if (winner === "player1") {
-        newP1Wins++;
+        newP1Wins += 1;
         setResult(`🎉 ${playerNames.player1} Wins!`);
         setFlashColor("green");
         win();
       } else if (winner === "player2") {
-        newP2Wins++;
+        newP2Wins += 1;
         setResult(`😢 ${playerNames.player2} Wins!`);
         setFlashColor("red");
         lose();
@@ -148,21 +150,24 @@ export default function Game() {
       if (newP1Wins >= roundsToWin || newP2Wins >= roundsToWin) {
         setGameOver(true);
         setTimeout(() => {
-          setResult(
+          const finalMsg =
             newP1Wins > newP2Wins
               ? `🏆 Game Over — ${playerNames.player1} won ${newP1Wins}-${newP2Wins}!`
-              : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`
-          );
-          saveScore();
+              : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`;
+          setResult(finalMsg);
         }, 220);
       }
     } else {
+      // Player vs Player mode
       if (pvpTurn === 1) {
+        // Player 1 picks
         setPlayer1Choice(choiceName);
         setResult(`${playerNames.player2}'s turn`);
         setPvpTurn(2);
       } else {
+        // Player 2 picks - then decide winner
         setPlayer2Choice(choiceName);
+
         const winner = decideWinner(player1Choice, choiceName);
         setRoundsPlayed((r) => r + 1);
 
@@ -170,12 +175,12 @@ export default function Game() {
         let newP2Wins = player2Wins;
 
         if (winner === "player1") {
-          newP1Wins++;
+          newP1Wins += 1;
           setResult(`🎉 ${playerNames.player1} Wins!`);
           setFlashColor("green");
           win();
         } else if (winner === "player2") {
-          newP2Wins++;
+          newP2Wins += 1;
           setResult(`🎉 ${playerNames.player2} Wins!`);
           setFlashColor("red");
           lose();
@@ -189,17 +194,21 @@ export default function Game() {
 
         setPlayer1Wins(newP1Wins);
         setPlayer2Wins(newP2Wins);
+
         setPvpTurn(1);
 
         if (newP1Wins >= roundsToWin || newP2Wins >= roundsToWin) {
           setGameOver(true);
+          // Auto-save PvP results to leaderboard
           setTimeout(() => {
-            setResult(
+            const finalMsg =
               newP1Wins > newP2Wins
                 ? `🏆 Game Over — ${playerNames.player1} won ${newP1Wins}-${newP2Wins}!`
-                : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`
-            );
-            saveScore();
+                : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`;
+            setResult(finalMsg);
+            
+            // Auto-save for PvP mode
+            savePvPScore(newP1Wins, newP2Wins);
           }, 220);
         }
       }
@@ -214,6 +223,7 @@ export default function Game() {
     setPlayer2Choice(null);
     setResult("");
     setGameOver(false);
+    setNameInput("");
     setPvpTurn(1);
   }
 
@@ -222,24 +232,33 @@ export default function Game() {
     resetMatch();
   }
 
-  // ✅ Save score for leaderboard
-  function saveScore() {
-    if (!gameOver) return;
-    const winner =
-      player1Wins > player2Wins ? playerNames.player1 : playerNames.player2;
-    const loser =
-      player1Wins > player2Wins ? playerNames.player2 : playerNames.player1;
-
+  // Save score for leaderboard (PvC mode)
+  function saveScore(name) {
+    const n = (name || "Player").trim() || "Player";
     const entry = {
-      winner,
-      loser,
-      winnerScore: Math.max(player1Wins, player2Wins),
-      loserScore: Math.min(player1Wins, player2Wins),
-      mode: gameMode.toUpperCase(),
-      timestamp: new Date().toISOString(),
+      name: n,
+      player1Score: player1Wins,
+      player2Score: player2Wins,
+      gameMode,
+      date: new Date().toISOString(),
     };
+    const updated = [entry, ...leaderboard].slice(0, 10); // keep last 10
+    setLeaderboard(updated);
+    localStorage.setItem(LB_KEY, JSON.stringify(updated));
+    setNameInput("");
+  }
 
-    const updated = [entry, ...leaderboard].slice(0, 10);
+  // Auto-save for PvP mode
+  function savePvPScore(p1Score, p2Score) {
+    const winner = p1Score > p2Score ? playerNames.player1 : playerNames.player2;
+    const entry = {
+      name: `${playerNames.player1} vs ${playerNames.player2} (Winner: ${winner})`,
+      player1Score: p1Score,
+      player2Score: p2Score,
+      gameMode: "pvp",
+      date: new Date().toISOString(),
+    };
+    const updated = [entry, ...leaderboard].slice(0, 10); // keep last 10
     setLeaderboard(updated);
     localStorage.setItem(LB_KEY, JSON.stringify(updated));
   }
@@ -356,7 +375,12 @@ export default function Game() {
                 Icon={c.Icon}
                 emoji={c.emoji}
                 onChoose={playRound}
-                disabled={gameOver}
+                disabled={
+                  gameOver ||
+                  (gameMode === "pvp" &&
+                    ((pvpTurn === 1 && player1Choice && !player2Choice) ||
+                      (pvpTurn === 2 && !player1Choice)))
+                }
                 darkMode={darkMode}
               />
             ))}
@@ -365,9 +389,7 @@ export default function Game() {
             <p className="mt-4 text-center font-semibold text-lg">
               {gameOver
                 ? "Game Over!"
-                : `Turn: ${
-                    pvpTurn === 1 ? playerNames.player1 : playerNames.player2
-                  }`}
+                : `Turn: ${pvpTurn === 1 ? playerNames.player1 : playerNames.player2}`}
             </p>
           )}
         </section>
@@ -381,10 +403,14 @@ export default function Game() {
             gameOver={gameOver}
             playerWins={player1Wins}
             compWins={player2Wins}
+            nameInput={nameInput}
+            setNameInput={setNameInput}
+            onSaveScore={() => saveScore(nameInput)}
             onPlayAgain={resetMatch}
             darkMode={darkMode}
             player1Label={playerNames.player1}
             player2Label={playerNames.player2}
+            gameMode={gameMode}
           />
         </section>
 
@@ -400,7 +426,9 @@ export default function Game() {
             </h2>
             <div
               className={`text-sm px-3 py-1 rounded-full ${
-                darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-600"
+                darkMode
+                  ? "bg-gray-700 text-gray-300"
+                  : "bg-gray-200 text-gray-600"
               }`}
             >
               Last 10 games
@@ -408,6 +436,19 @@ export default function Game() {
           </div>
           <Leaderboard leaderboard={leaderboard} darkMode={darkMode} />
         </section>
+
+        {/* Footer */}
+        <footer
+          className={`text-center text-sm p-4 rounded-xl ${
+            darkMode
+              ? "bg-gray-800/50 text-gray-400"
+              : "bg-white/80 text-gray-700"
+          }`}
+        >
+          💡 <strong>Tip:</strong> Change <em>Best of</em> to adjust match
+          length. 🔊 Sounds use your browser audio (user gesture may be
+          required).
+        </footer>
       </div>
     </div>
   );

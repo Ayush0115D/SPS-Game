@@ -5,8 +5,8 @@ export default function Leaderboard({ leaderboard, darkMode }) {
     return (
       <div className={`
         p-8 rounded-2xl border text-center
-        ${darkMode 
-          ? 'bg-gray-800 border-gray-700 text-gray-400' 
+        ${darkMode
+          ? 'bg-gray-800 border-gray-700 text-gray-400'
           : 'bg-white border-gray-300 text-gray-600'
         }
       `}>
@@ -18,13 +18,13 @@ export default function Leaderboard({ leaderboard, darkMode }) {
   return (
     <div className={`
       rounded-2xl border overflow-hidden
-      ${darkMode 
-        ? 'bg-gray-800 border-gray-700' 
+      ${darkMode
+        ? 'bg-gray-800 border-gray-700'
         : 'bg-white border-gray-300'
       }
     `}>
       {leaderboard.map((entry, index) => (
-        <div 
+        <div
           key={index}
           className={`
             flex items-center justify-between p-4 border-b last:border-b-0
@@ -32,18 +32,18 @@ export default function Leaderboard({ leaderboard, darkMode }) {
             ${index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20' : ''}
           `}
         >
-          {/* Rank + Name + Date */}
+          {/* Rank + Name + Date + Mode */}
           <div className="flex items-center gap-4">
             <div className={`
               w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-              ${index === 0 
-                ? 'bg-yellow-500 text-white' 
-                : index === 1 
-                ? 'bg-gray-400 text-white' 
-                : index === 2 
+              ${index === 0
+                ? 'bg-yellow-500 text-white'
+                : index === 1
+                ? 'bg-gray-400 text-white'
+                : index === 2
                 ? 'bg-orange-600 text-white'
-                : darkMode 
-                ? 'bg-gray-700 text-gray-300' 
+                : darkMode
+                ? 'bg-gray-700 text-gray-300'
                 : 'bg-gray-200 text-gray-700'
               }
             `}>
@@ -54,19 +54,31 @@ export default function Leaderboard({ leaderboard, darkMode }) {
                 {entry.name}
               </div>
               <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {new Date(entry.date).toLocaleDateString()}
+                {new Date(entry.date).toLocaleDateString()} • 
+                <span className={`ml-1 px-2 py-0.5 rounded text-xs font-medium
+                  ${entry.gameMode === 'pvp' 
+                    ? darkMode 
+                      ? 'bg-indigo-900/50 text-indigo-300' 
+                      : 'bg-indigo-100 text-indigo-700'
+                    : darkMode 
+                      ? 'bg-purple-900/50 text-purple-300' 
+                      : 'bg-purple-100 text-purple-700'
+                  }
+                `}>
+                  {entry.gameMode === 'pvp' ? 'PvP' : 'PvC'}
+                </span>
               </div>
             </div>
           </div>
-          
-          {/* Score vs Opponent */}
+         
+          {/* Score Display */}
           <div className="text-right">
-          <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-       {entry.playerScore}-{entry.computerScore}
-     </div>
-     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-      final score
-      </div>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+              {entry.player1Score}-{entry.player2Score}
+            </div>
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              final score
+            </div>
           </div>
         </div>
       ))}
