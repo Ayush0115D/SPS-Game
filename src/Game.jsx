@@ -16,6 +16,7 @@ import Controls from "./components/Controls";
 import ResultDisplay from "./components/ResultDisplay";
 import Leaderboard from "./components/Leaderboard";
 import useButtonAnimation from "./hooks/useButtonAnimation";
+import GameModeSelector from "./Components/GameModeSelector";
 
 const CHOICES = [
   { name: "Rock", Icon: FaHandRock, emoji: "✊" },
@@ -35,24 +36,36 @@ export default function Game() {
   const [darkMode, setDarkMode] = useState(true);
 
   // Match state
-  const [playerWins, setPlayerWins] = useState(0);
-  const [compWins, setCompWins] = useState(0);
+  const [player1Wins, setPlayer1Wins] = useState(0);
+  const [player2Wins, setPlayer2Wins] = useState(0);
   const [roundsPlayed, setRoundsPlayed] = useState(0);
 
-  const [userChoice, setUserChoice] = useState(null);
-  const [compChoice, setCompChoice] = useState(null);
-  const [result, setResult] = useState("");
+  // Choices for both players
+  const [player1Choice, setPlayer1Choice] = useState(null);
+  const [player2Choice, setPlayer2Choice] = useState(null);
 
+  const [result, setResult] = useState("");
   const [bestOf, setBestOf] = useState(5);
   const roundsToWin = Math.ceil(bestOf / 2);
   const [gameOver, setGameOver] = useState(false);
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState([]);
-  const [nameInput, setNameInput] = useState("");
 
   // Audio
   const { click, win, lose, draw } = useAudio();
+
+  // Game mode state: "pvc" or "pvp"
+  const [gameMode, setGameMode] = useState("pvc");
+
+  // Custom player names
+  const [playerNames, setPlayerNames] = useState({
+    player1: "You",
+    player2: "Computer",
+  });
+
+  // Tracks which player's turn it is in PvP mode
+  const [pvpTurn, setPvpTurn] = useState(1);
 
   // Load leaderboard on mount
   useEffect(() => {
@@ -82,76 +95,126 @@ export default function Game() {
     }
   }, [darkMode]);
 
-  function decideWinner(p, c) {
-    if (p === c) return "draw";
+  function decideWinner(p1, p2) {
+    if (p1 === p2) return "draw";
     if (
-      (p === "Rock" && c === "Scissors") ||
-      (p === "Paper" && c === "Rock") ||
-      (p === "Scissors" && c === "Paper")
+      (p1 === "Rock" && p2 === "Scissors") ||
+      (p1 === "Paper" && p2 === "Rock") ||
+      (p1 === "Scissors" && p2 === "Paper")
     ) {
-      return "player";
+      return "player1";
     }
-    return "computer";
+    return "player2";
   }
 
   function playRound(choiceName) {
     if (gameOver) return;
     click();
-    triggerAnimation(); // button pulse animation
+    triggerAnimation();
 
-    const comp = CHOICES[Math.floor(Math.random() * CHOICES.length)].name;
-    const winner = decideWinner(choiceName, comp);
+    if (gameMode === "pvc") {
+      const compChoice =
+        CHOICES[Math.floor(Math.random() * CHOICES.length)].name;
+      const winner = decideWinner(choiceName, compChoice);
 
-    setUserChoice(choiceName);
-    setCompChoice(comp);
-    setRoundsPlayed((r) => r + 1);
+      setPlayer1Choice(choiceName);
+      setPlayer2Choice(compChoice);
+      setRoundsPlayed((r) => r + 1);
 
-    let newPlayer = playerWins;
-    let newComp = compWins;
+      let newP1Wins = player1Wins;
+      let newP2Wins = player2Wins;
 
-    if (winner === "player") {
-      newPlayer += 1;
-      setResult("🎉 You Win!");
-      setFlashColor("green"); // ✅ Flash green
-      win();
-    } else if (winner === "computer") {
-      newComp += 1;
-      setResult("😢 You Lose!");
-      setFlashColor("red"); // ✅ Flash red
-      lose();
+      if (winner === "player1") {
+        newP1Wins++;
+        setResult(`🎉 ${playerNames.player1} Wins!`);
+        setFlashColor("green");
+        win();
+      } else if (winner === "player2") {
+        newP2Wins++;
+        setResult(`😢 ${playerNames.player2} Wins!`);
+        setFlashColor("red");
+        lose();
+      } else {
+        setResult("🤝 It's a Draw!");
+        setFlashColor("blue");
+        draw();
+      }
+
+      setTimeout(() => setFlashColor(null), 400);
+
+      setPlayer1Wins(newP1Wins);
+      setPlayer2Wins(newP2Wins);
+
+      if (newP1Wins >= roundsToWin || newP2Wins >= roundsToWin) {
+        setGameOver(true);
+        setTimeout(() => {
+          setResult(
+            newP1Wins > newP2Wins
+              ? `🏆 Game Over — ${playerNames.player1} won ${newP1Wins}-${newP2Wins}!`
+              : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`
+          );
+          saveScore();
+        }, 220);
+      }
     } else {
-      setResult("🤝 It's a Draw!");
-      setFlashColor("blue"); // ✅ Flash blue
-      draw();
-    }
+      if (pvpTurn === 1) {
+        setPlayer1Choice(choiceName);
+        setResult(`${playerNames.player2}'s turn`);
+        setPvpTurn(2);
+      } else {
+        setPlayer2Choice(choiceName);
+        const winner = decideWinner(player1Choice, choiceName);
+        setRoundsPlayed((r) => r + 1);
 
-    // Reset flash after animation
-    setTimeout(() => setFlashColor(null), 400);
+        let newP1Wins = player1Wins;
+        let newP2Wins = player2Wins;
 
-    setPlayerWins(newPlayer);
-    setCompWins(newComp);
+        if (winner === "player1") {
+          newP1Wins++;
+          setResult(`🎉 ${playerNames.player1} Wins!`);
+          setFlashColor("green");
+          win();
+        } else if (winner === "player2") {
+          newP2Wins++;
+          setResult(`🎉 ${playerNames.player2} Wins!`);
+          setFlashColor("red");
+          lose();
+        } else {
+          setResult("🤝 It's a Draw!");
+          setFlashColor("blue");
+          draw();
+        }
 
-    if (newPlayer >= roundsToWin || newComp >= roundsToWin) {
-      setGameOver(true);
-      setTimeout(() => {
-        const finalMsg =
-          newPlayer > newComp
-            ? `🏆 Game Over — You won ${newPlayer}-${newComp}!`
-            : `💻 Game Over — Computer won ${newComp}-${newPlayer}`;
-        setResult(finalMsg);
-      }, 220);
+        setTimeout(() => setFlashColor(null), 400);
+
+        setPlayer1Wins(newP1Wins);
+        setPlayer2Wins(newP2Wins);
+        setPvpTurn(1);
+
+        if (newP1Wins >= roundsToWin || newP2Wins >= roundsToWin) {
+          setGameOver(true);
+          setTimeout(() => {
+            setResult(
+              newP1Wins > newP2Wins
+                ? `🏆 Game Over — ${playerNames.player1} won ${newP1Wins}-${newP2Wins}!`
+                : `🏆 Game Over — ${playerNames.player2} won ${newP2Wins}-${newP1Wins}!`
+            );
+            saveScore();
+          }, 220);
+        }
+      }
     }
   }
 
   function resetMatch() {
-    setPlayerWins(0);
-    setCompWins(0);
+    setPlayer1Wins(0);
+    setPlayer2Wins(0);
     setRoundsPlayed(0);
-    setUserChoice(null);
-    setCompChoice(null);
+    setPlayer1Choice(null);
+    setPlayer2Choice(null);
     setResult("");
     setGameOver(false);
-    setNameInput("");
+    setPvpTurn(1);
   }
 
   function newGameWith(bestOfValue) {
@@ -159,19 +222,26 @@ export default function Game() {
     resetMatch();
   }
 
-  // ✅ Save both playerWins and compWins
-  function saveScore(name) {
-    const n = (name || "Player").trim() || "Player";
+  // ✅ Save score for leaderboard
+  function saveScore() {
+    if (!gameOver) return;
+    const winner =
+      player1Wins > player2Wins ? playerNames.player1 : playerNames.player2;
+    const loser =
+      player1Wins > player2Wins ? playerNames.player2 : playerNames.player1;
+
     const entry = {
-      name: n,
-      playerScore: playerWins,
-      compScore: compWins,
-      date: new Date().toISOString(),
+      winner,
+      loser,
+      winnerScore: Math.max(player1Wins, player2Wins),
+      loserScore: Math.min(player1Wins, player2Wins),
+      mode: gameMode.toUpperCase(),
+      timestamp: new Date().toISOString(),
     };
-    const updated = [entry, ...leaderboard].slice(0, 10); // keep last 10
+
+    const updated = [entry, ...leaderboard].slice(0, 10);
     setLeaderboard(updated);
     localStorage.setItem(LB_KEY, JSON.stringify(updated));
-    setNameInput("");
   }
 
   function clearLeaderboard() {
@@ -191,7 +261,7 @@ export default function Game() {
           : "bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 text-gray-900"
       }`}
     >
-      {/* ✅ Flash overlay */}
+      {/* Flash overlay */}
       {flashColor && (
         <div
           className={`absolute inset-0 z-50 animate-fadeout pointer-events-none ${
@@ -225,6 +295,16 @@ export default function Game() {
           </h1>
 
           <div className="flex items-center gap-4">
+            <GameModeSelector
+              mode={gameMode}
+              onChangeMode={(mode) => {
+                setGameMode(mode);
+                resetMatch();
+              }}
+              darkMode={darkMode}
+              onSetNames={setPlayerNames}
+            />
+
             <button
               onClick={toggleDarkMode}
               className={`
@@ -256,11 +336,13 @@ export default function Game() {
         {/* Scoreboard */}
         <section className="mb-8">
           <Scoreboard
-            playerWins={playerWins}
-            compWins={compWins}
+            playerWins={player1Wins}
+            compWins={player2Wins}
             roundsPlayed={roundsPlayed}
             roundsToWin={roundsToWin}
             darkMode={darkMode}
+            player1Label={playerNames.player1}
+            player2Label={playerNames.player2}
           />
         </section>
 
@@ -279,22 +361,30 @@ export default function Game() {
               />
             ))}
           </div>
+          {gameMode === "pvp" && (
+            <p className="mt-4 text-center font-semibold text-lg">
+              {gameOver
+                ? "Game Over!"
+                : `Turn: ${
+                    pvpTurn === 1 ? playerNames.player1 : playerNames.player2
+                  }`}
+            </p>
+          )}
         </section>
 
         {/* Result Display */}
         <section className="mb-8">
           <ResultDisplay
-            userChoice={userChoice}
-            compChoice={compChoice}
+            userChoice={player1Choice}
+            compChoice={player2Choice}
             result={result}
             gameOver={gameOver}
-            playerWins={playerWins}
-            compWins={compWins}
-            nameInput={nameInput}
-            setNameInput={setNameInput}
-            onSaveScore={() => saveScore(nameInput)}
+            playerWins={player1Wins}
+            compWins={player2Wins}
             onPlayAgain={resetMatch}
             darkMode={darkMode}
+            player1Label={playerNames.player1}
+            player2Label={playerNames.player2}
           />
         </section>
 
@@ -316,19 +406,8 @@ export default function Game() {
               Last 10 games
             </div>
           </div>
-          {/* ✅ Pass both scores */}
           <Leaderboard leaderboard={leaderboard} darkMode={darkMode} />
         </section>
-
-        {/* Footer */}
-        <footer
-          className={`text-center text-sm p-4 rounded-xl ${
-            darkMode ? "bg-gray-800/50 text-gray-400" : "bg-white/80 text-gray-700"
-          }`}
-        >
-          💡 <strong>Tip:</strong> Change <em>Best of</em> to adjust match length.
-          🔊 Sounds use your browser audio (user gesture may be required).
-        </footer>
       </div>
     </div>
   );
