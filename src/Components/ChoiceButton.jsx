@@ -1,19 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function ChoiceButton({ name, Icon, emoji, onChoose, disabled, darkMode }) {
   const [clicked, setClicked] = useState(false);
+
+  useEffect(() => {
+    if (clicked) {
+      const timer = setTimeout(() => setClicked(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [clicked]);
 
   const handleClick = () => {
     if (disabled) return;
     setClicked(true);
     onChoose(name);
-    setTimeout(() => setClicked(false), 300);
   };
 
   return (
     <button
       onClick={handleClick}
       disabled={disabled}
+      aria-label={`Choose ${name}`}
       className={`
         group relative p-8 rounded-2xl border-2 transition-all duration-300 transform
         ${clicked ? "scale-125 rotate-3" : "hover:scale-110"}
