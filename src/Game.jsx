@@ -10,11 +10,11 @@ import {
 } from "react-icons/fa";
 
 import useAudio from "./hooks/useAudio";
-import ChoiceButton from "./components/ChoiceButton";
-import Scoreboard from "./components/Scoreboard";
-import Controls from "./components/Controls";
-import ResultDisplay from "./components/ResultDisplay";
-import Leaderboard from "./components/Leaderboard";
+import ChoiceButton from "./Components/ChoiceButton";
+import Scoreboard from "./Components/Scoreboard";
+import Controls from "./Components/Controls";
+import ResultDisplay from "./Components/ResultDisplay";
+import Leaderboard from "./Components/Leaderboard";
 import useButtonAnimation from "./hooks/useButtonAnimation";
 import GameModeSelector from "./Components/GameModeSelector";
 
