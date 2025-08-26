@@ -32,6 +32,7 @@ export default function Leaderboard({ leaderboard, darkMode }) {
             ${index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20' : ''}
           `}
         >
+          {/* Rank + Name + Date */}
           <div className="flex items-center gap-4">
             <div className={`
               w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
@@ -58,13 +59,14 @@ export default function Leaderboard({ leaderboard, darkMode }) {
             </div>
           </div>
           
+          {/* Score vs Opponent */}
           <div className="text-right">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-              {entry.score}
-            </div>
-            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              won
-            </div>
+          <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+       {entry.playerScore}-{entry.computerScore}
+     </div>
+     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+      final score
+      </div>
           </div>
         </div>
       ))}

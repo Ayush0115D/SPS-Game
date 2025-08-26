@@ -35,3 +35,11 @@
   from { opacity: 0.4; }
   to { opacity: 0; }
 }
+@keyframes pulse-fast {
+  0% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 0.25s ease-out forwards;
+}
