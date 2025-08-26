@@ -437,7 +437,7 @@ export default function Game() {
           <Leaderboard leaderboard={leaderboard} darkMode={darkMode} />
         </section>
 
-        {/* Footer */}
+        {/* Footer
         <footer
           className={`text-center text-sm p-4 rounded-xl ${
             darkMode
@@ -448,7 +448,7 @@ export default function Game() {
           💡 <strong>Tip:</strong> Change <em>Best of</em> to adjust match
           length. 🔊 Sounds use your browser audio (user gesture may be
           required).
-        </footer>
+        </footer> */}
       </div>
     </div>
   );
